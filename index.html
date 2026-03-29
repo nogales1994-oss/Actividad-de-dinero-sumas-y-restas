@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NogalesPT - Problemas con Dinero</title>
+    <style>
+        /* Reset y Variables */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        :root {
+            --verde-botella: #004d40;
+            --blanco: #ffffff;
+            --gris-claro: #f4f4f4;
+            --negro: #333;
+            --verde-claro: #26a69a;
+        }
+
+        body { background-color: var(--blanco); color: var(--negro); overflow-x: hidden; }
+
+        /* Estilos de Portada */
+        #portada {
+            background-color: var(--verde-botella);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            color: var(--blanco);
+        }
+
+        .logo-grande {
+            max-width: 300px;
+            width: 80%;
+            margin-bottom: 30px;
+        }
+
+        .titulo-recurso {
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .btn-principal {
+            background-color: var(--blanco);
+            color: var(--verde-botella);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .btn-principal:hover { transform: scale(1.05); }
+
+        .btn-pdf {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .lema {
+            font-size: 0.9rem;
+            max-width: 500px;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+
+        /* Interfaz del Recurso */
+        #contenedor-recurso { display: none; padding: 10px; min-height: 100vh; }
+
+        .header-recurso {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .logo-pequeno { height: 40px; }
+
+        /* Controles Superiores (Voz y Guiado) */
+        .controles-superiores { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .modo-guiado-btn {
+            background: #fff; border: 2px solid #ff9800; color: #ff9800; border-radius: 20px; 
+            padding: 8px 15px; font-weight: bold; cursor: pointer; transition: 0.3s; 
+            font-size: 0.9rem; display: flex; align-items: center; gap: 5px;
+        }
+        .modo-guiado-btn:hover { background: #fff3e0; }
+        .modo-guiado-btn.activo {
+            background: #ff9800; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .voice-control {
+            display: flex; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: bold;
+        }
+
+        .switch {
+            position: relative; display: inline-block; width: 40px; height: 20px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px;
+            left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--verde-botella); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Selector de Problemas */
+        .selector-problemas {
+            display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-wrap: wrap;
+        }
+
+        .dot-nav {
+            width: 35px; height: 35px; border-radius: 5px; background: var(--gris-claro);
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            font-weight: bold; font-size: 0.9rem; transition: 0.3s; border: 1px solid #ddd;
+        }
+
+        .dot-nav.active {
+            background: var(--verde-botella); color: white; border-color: var(--verde-botella);
+        }
+
+        /* Cuerpo del Problema */
+        .pantalla-problema {
+            max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 220px; gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .pantalla-problema { grid-template-columns: 1fr; }
+            .monedas-sidebar { order: -1; flex-direction: row !important; overflow-x: auto; width: 100%; justify-content: flex-start; padding: 15px; }
+            .monedas-sidebar p { display: none; }
+            .cajas-guiadas-container { flex-direction: column; }
+        }
+
+        .caja-texto {
+            background: var(--gris-claro); padding: 20px; border-radius: 15px;
+            margin-bottom: 20px; border-left: 5px solid var(--verde-botella);
+        }
+
+        .texto-problema { font-size: 1.3rem; line-height: 1.4; margin-bottom: 10px; }
+
+        .btn-voz {
+            background: var(--verde-botella); color: white; border: none; padding: 10px 18px;
+            border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold;
+        }
+
+        .btn-voz:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Area Drag and Drop NORMAL */
+        .zona-deposito {
+            background: #fff; border: 3px dashed var(--verde-botella); min-height: 300px;
+            border-radius: 15px; padding: 20px; display: flex; flex-wrap: wrap;
+            align-content: flex-start; gap: 12px; position: relative;
+        }
+
+        .zona-deposito::after {
+            content: "Coloca aquí el dinero"; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); opacity: 0.2; font-size: 1.5rem; pointer-events: none;
+        }
+
+        /* --- MODO GUIADO --- */
+        .mensaje-guiado {
+            background: #e3f2fd; color: #1565c0; padding: 15px; border-radius: 10px;
+            font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; text-align: center; border: 2px solid #90caf9;
+        }
+        .cajas-guiadas-container {
+            display: flex; gap: 15px; margin-bottom: 15px;
+        }
+        .caja-guiada {
+            flex: 1; border: 3px dashed var(--verde-claro); border-radius: 15px; padding: 10px; 
+            background: #fff; min-height: 220px; display: flex; flex-direction: column; position: relative;
+            transition: 0.3s;
+        }
+        .caja-guiada.correcta {
+            border-color: #4caf50; background: #e8f5e9;
+        }
+        .caja-guiada.correcta::before {
+            content: '✅'; position: absolute; top: 10px; right: 10px; font-size: 1.5rem;
+        }
+        
+        .caja-guiada.zona-operacion {
+            border-color: #ffb74d; background: #fff8e1; border-width: 4px;
+        }
+
+        .caja-guiada h3 { 
+            font-size: 1rem; color: var(--verde-botella); text-align: center; 
+            margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; 
+        }
+        .contenido-cg { flex-grow: 1; display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; }
+        .total-cg { text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1rem; color: #555; }
+        
+        .zona-respuesta-guiada {
+            background: #fff3e0; padding: 20px; border-radius: 15px; border: 2px solid #ffb74d; 
+            text-align: center; display: none; animation: popIn 0.3s ease; margin-top: 15px;
+        }
+        .instruccion-final { font-size: 1.2rem; font-weight: bold; color: #e65100; margin-bottom: 15px; }
+        
+        /* Botones de Opciones (3 resultados) */
+        .opciones-respuesta {
+            display: flex; justify-content: center; gap: 15px; margin-top: 10px; flex-wrap: wrap;
+        }
+        .btn-opcion {
+            background: #fff; border: 3px solid #fb8c00; color: #fb8c00; font-size: 1.5rem;
+            font-weight: bold; padding: 10px 25px; border-radius: 12px; cursor: pointer;
+            transition: 0.2s; min-width: 80px;
+        }
+        .btn-opcion:hover { background: #fff3e0; transform: scale(1.05); }
+        .btn-opcion.correcta { background: #4caf50; border-color: #388e3c; color: white; }
+        .btn-opcion.incorrecta { background: #e53935; border-color: #c62828; color: white; }
+
+        #feedback-guiado { margin-top: 15px; font-weight: bold; font-size: 1.1rem; min-height: 20px; }
+
+        /* Billetes en Modo Guiado */
+        .caja-guiada .billete { width: 140px; height: 77px; transition: transform 0.2s; }
+        .caja-guiada .moneda { width: 70px; height: 70px; transition: transform 0.2s; }
+        .caja-guiada .billete:hover, .caja-guiada .moneda:hover { transform: scale(1.05); }
+
+        .monedas-sidebar {
+            background: #f9f9f9; padding: 20px; border-radius: 15px; display: flex;
+            flex-direction: column; gap: 12px; align-items: center; border: 1px solid #eee;
+            position: sticky; top: 10px;
+        }
+
+        /* ----- ESTILOS ACTUALIZADOS PARA DINERO REAL ----- */
+        .billete, .moneda {
+            display: flex; align-items: center; justify-content: center; cursor: grab;
+            user-select: none; touch-action: none;
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            background-color: transparent !important; border: none !important; box-shadow: none !important;
+            color: transparent !important; font-size: 0;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.3));
+        }
+
+        .billete { width: 100px; height: 55px; }
+        .moneda { width: 55px; height: 55px; border-radius: 50%; }
+
+        /* Tamaño grande dentro de la caja normal */
+        .zona-deposito .billete { width: 240px; height: 132px; transition: transform 0.2s; }
+        .zona-deposito .moneda { width: 120px; height: 120px; transition: transform 0.2s; }
+        .zona-deposito .billete:hover, .zona-deposito .moneda:hover { transform: scale(1.05); }
+
+        /* Asignación de imágenes */
+        .billete-5 { background-image: url('https://globalsymbols.com/uploads/production/image/imagefile/16660/17_16661_77e4dff5-f0a2-43ee-b560-4562c68a68c0.png'); }
+        .billete-10 { background-image: url('https://globalsymbols.com/uploads/production/image/imagefile/16662/17_16663_c2b60dbe-f9a7-4b1f-88eb-fe92e74a8f0b.png'); }
+        .billete-20 { background-image: url('https://globalsymbols.com/uploads/production/image/imagefile/16664/17_16665_bb51d43b-ca62-40c2-8cdc-5531cec69af4.png'); }
+        .billete-50 { background-image: url('https://globalsymbols.com/uploads/production/image/imagefile/16666/17_16667_1fd1d6e8-5ae6-41d5-aad0-1ef4851920a8.png'); }
+        .billete-100 { background-image: url('https://globalsymbols.com/uploads/production/image/imagefile/16667/17_16668_41bdbd70-0287-4b39-a01f-d525b820e9bb.png'); }
+        .moneda-1 { background-image: url('https://static.arasaac.org/pictograms/4776/4776_300.png'); }
+        .moneda-2 { background-image: url('https://static.arasaac.org/pictograms/10279/10279_300.png'); }
+
+        .controles {
+            display: flex; justify-content: space-between; margin-top: 25px;
+            max-width: 1000px; margin-left: auto; margin-right: auto; padding: 0 10px;
+        }
+
+        .btn-accion {
+            padding: 14px 28px; border: none; border-radius: 12px; cursor: pointer;
+            font-weight: bold; font-size: 1rem; transition: 0.2s;
+        }
+
+        .btn-borrar { background: #e57373; color: white; }
+        .btn-siguiente { background: var(--verde-botella); color: white; min-width: 150px; }
+        .btn-accion:hover { filter: brightness(1.1); }
+
+        /* --- ESTILOS CRÉDITOS --- */
+        .footer-creditos {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 40px;
+            padding: 15px 10px;
+            border-top: 1px solid #eee;
+            line-height: 1.5;
+        }
+        .footer-creditos a { color: var(--verde-botella); text-decoration: none; font-weight: bold; }
+
+        /* --- ESTILOS PICTOGRAMAS --- */
+        .palabra-picto {
+            color: var(--verde-botella); font-weight: bold; cursor: pointer;
+            text-decoration: underline; text-decoration-style: dotted; padding: 0 2px;
+            border-radius: 4px; transition: background 0.2s; position: relative; white-space: nowrap;
+        }
+        .palabra-picto:hover { background: #e0f2f1; }
+        
+        .picto-tooltip {
+            position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+            width: 130px; height: 130px; background: white; border: 3px solid var(--verde-botella);
+            border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 100;
+            display: flex; justify-content: center; align-items: center; padding: 8px;
+            cursor: default; animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .picto-tooltip::after {
+            content: ''; position: absolute; top: 100%; left: 50%; margin-left: -10px;
+            border-width: 10px; border-style: solid; border-color: var(--verde-botella) transparent transparent transparent;
+        }
+
+        .picto-tooltip img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+
+        .mini-loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--verde-botella);
+            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
+        }
+
+        @keyframes popIn {
+            from { transform: translateX(-50%) scale(0.5); opacity: 0; }
+            to { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Estilos Impresion / PDF */
+        #seccion-impresion { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #seccion-impresion, #seccion-impresion * { visibility: visible; }
+            #seccion-impresion { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 0; }
+            .pagina-pdf { page-break-after: always; display: flex; flex-direction: column; height: 98vh; padding: 1cm; box-sizing: border-box; }
+            .ficha-problema { flex: 1; border: 2px solid #004d40; margin-bottom: 20px; padding: 20px; display: flex; flex-direction: column; }
+            .ficha-problema:last-child { margin-bottom: 0; }
+            .cuadro-dibujo { flex-grow: 1; border: 2px dashed #666; margin: 15px 0; min-height: 180px; }
+            h2 { color: #004d40; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PORTADA -->
+    <section id="portada">
+        <img src="https://i.postimg.cc/ZKqP0qhd/logo_nogalespt_blanco_(1)_editado_(1).webp" alt="Logo NogalesPT" class="logo-grande">
+        <h1 class="titulo-recurso">Problemas de la Vida Real:<br>Suma y Resta de Dinero</h1>
+        <button class="btn-principal" onclick="iniciarRecurso()">Empezar</button>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; max-width: 600px;">
+            <button class="btn-pdf" onclick="prepararPDF('normal')" style="margin-bottom: 0;">📄 PDF Normal</button>
+            <button class="btn-pdf" onclick="prepararPDF('guiado')" style="margin-bottom: 0;">📝 PDF Guiado</button>
+            <button class="btn-pdf" onclick="prepararPDF('blanco')" style="margin-bottom: 0;">✏️ PDF Sin Números</button>
+        </div>
+        <p class="lema">NogalesPT: Recursos gratuitos y sin publicidad.<br>La educación no se vende, se comparte.</p>
+    </section>
+
+    <!-- CONTENIDO DEL RECURSO -->
+    <main id="contenedor-recurso">
+        <div class="header-recurso">
+            <img src="https://i.postimg.cc/brgRtfyj/logo_(1).webp" alt="Logo NogalesPT Color" class="logo-pequeno">
+            
+            <div class="controles-superiores">
+                <button id="btn-modo-guiado" class="modo-guiado-btn" onclick="toggleModoGuiado()">🪄 Activar Modo Guiado</button>
+                <div class="voice-control">
+                    <span>VOZ</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-voz" checked onchange="actualizarEstadoVoz()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <nav class="selector-problemas" id="nav-problemas">
+            <!-- Botones 1-10 generados por JS -->
+        </nav>
+
+        <div class="pantalla-problema">
+            <div class="col-izquierda">
+                <div class="caja-texto">
+                    <p id="texto-enunciado" class="texto-problema"></p>
+                    <button class="btn-voz" id="btn-leer" onclick="leerTexto()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        Escuchar problema
+                    </button>
+                </div>
+
+                <!-- CONTENEDOR NORMAL -->
+                <div id="zona-normal-container">
+                    <div class="zona-deposito" id="zona-deposito" ondrop="drop(event, 0)" ondragover="allowDrop(event)">
+                        <!-- Aquí caen los billetes -->
+                    </div>
+                    <div style="margin-top: 15px; font-size: 1.2rem;">
+                        <strong>Total en pantalla:</strong> <span id="total-colocado" style="color: var(--verde-botella); font-size: 1.5rem;">0</span> <strong style="color: var(--verde-botella);">€</strong>
+                    </div>
+                </div>
+
+                <!-- CONTENEDOR MODO GUIADO -->
+                <div id="zona-guiada-container" style="display:none;">
+                    <div id="mensaje-guiado" class="mensaje-guiado">1️⃣ Coloca el dinero correcto en cada recuadro.</div>
+                    <div class="cajas-guiadas-container">
+                        <div class="caja-guiada" id="caja-g1" ondrop="drop(event, 1)" ondragover="allowDrop(event)">
+                            <h3 id="titulo-cg1">Caja 1</h3>
+                            <div class="contenido-cg" id="contenido-cg1"></div>
+                            <div class="total-cg">Total: <span id="total-cg1">0</span>€</div>
+                        </div>
+                        <div class="caja-guiada" id="caja-g2" ondrop="drop(event, 2)" ondragover="allowDrop(event)">
+                            <h3 id="titulo-cg2">Caja 2</h3>
+                            <div class="contenido-cg" id="contenido-cg2"></div>
+                            <div class="total-cg">Total: <span id="total-cg2">0</span>€</div>
+                        </div>
+                    </div>
+                    
+                    <div id="zona-respuesta-guiada" class="zona-respuesta-guiada">
+                        <p id="instruccion-final-guiada" class="instruccion-final"></p>
+                        
+                        <!-- NUEVOS 3 BOTONES DE OPCIONES -->
+                        <div class="opciones-respuesta" id="opciones-respuesta">
+                            <!-- Se generan con JavaScript -->
+                        </div>
+                        
+                        <p id="feedback-guiado"></p>
+                    </div>
+                </div>
+
+            </div>
+
+            <aside class="monedas-sidebar">
+                <p style="font-size: 0.7rem; font-weight: bold; color: #666; text-transform: uppercase;">Toca o arrastra</p>
+                <div class="billete billete-5" draggable="true" data-valor="5" id="b5">5€</div>
+                <div class="billete billete-10" draggable="true" data-valor="10" id="b10">10€</div>
+                <div class="billete billete-20" draggable="true" data-valor="20" id="b20">20€</div>
+                <div class="billete billete-50" draggable="true" data-valor="50" id="b50">50€</div>
+                <div class="billete billete-100" draggable="true" data-valor="100" id="b100">100€</div>
+                <div class="moneda moneda-1" draggable="true" data-valor="1" id="m1">1€</div>
+                <div class="moneda moneda-2" draggable="true" data-valor="2" id="m2">2€</div>
+            </aside>
+        </div>
+
+        <div class="controles">
+            <button class="btn-accion btn-borrar" onclick="borrarDinero()">Borrar billetes</button>
+            <button class="btn-accion btn-siguiente" id="btn-next" onclick="validarYPasar()">Siguiente Problema</button>
+        </div>
+
+        <!-- CRÉDITOS CREATIVE COMMONS -->
+        <footer class="footer-creditos">
+            <p>Los símbolos pictográficos utilizados son de <a href="http://www.arasaac.org" target="_blank">ARASAAC</a> (creados por Sergio Palao) y propiedad del Gobierno de Aragón. Licencia CC BY-NC-SA.</p>
+            <p>Recurso educativo interactivo creado por <strong>NogalesPT</strong>. Licencia CC BY-NC-SA.</p>
+        </footer>
+    </main>
+
+    <!-- SECCION PARA IMPRESION (PDF) -->
+    <div id="seccion-impresion">
+        <div id="contenido-pdf"></div>
+    </div>
+
+    <script>
+        // Array de problemas ampliado con las "opciones" múltiples
+        const problemas = [
+            { id: 1, texto: "Juan tiene 25€ y su abuela le regala 12€ por su cumpleaños. ¿Cuánto dinero tiene Juan en total?", respuesta: 37, opciones: [37, 27, 47],
+              guiado: { caja1: {texto: "Dinero de Juan", valor: 25}, caja2: {texto: "Dinero de la abuela", valor: 12}, accion: "juntar el dinero de Juan y el de su abuela" } },
+            
+            { id: 2, texto: "María quiere comprar un juego que cuesta 45€. Si ya tiene ahorrados 20€, ¿cuánto dinero le falta?", respuesta: 25, opciones: [25, 15, 65],
+              guiado: { caja1: {texto: "Precio del juego", valor: 45}, caja2: {texto: "Dinero ahorrado", valor: 20}, accion: "restarle a 45€ el dinero que ya tiene ahorrado" } },
+            
+            { id: 3, texto: "En mi hucha había 80€. He sacado 35€ para comprar un regalo. ¿Cuánto dinero queda ahora en la hucha?", respuesta: 45, opciones: [45, 55, 35],
+              guiado: { caja1: {texto: "Dinero en la hucha", valor: 80}, caja2: {texto: "Dinero para el regalo", valor: 35}, accion: "quitarle el dinero del regalo a la hucha" } },
+            
+            { id: 4, texto: "Tengo un billete de 50€. Compro un libro de 12€ y una mochila de 25€. ¿Cuánto dinero me sobra?", respuesta: 13, opciones: [13, 23, 17],
+              guiado: { caja1: {texto: "Billete que tengo", valor: 50}, caja2: {texto: "Gasto total (12€ + 25€)", valor: 37}, accion: "pagar el gasto con tu billete de 50€" } },
+            
+            { id: 5, texto: "Papá ha comprado fruta por 18€ y carne por 32€. Si paga con un billete de 100€, ¿cuánto le devuelven?", respuesta: 50, opciones: [50, 40, 60],
+              guiado: { caja1: {texto: "Billete con el que paga", valor: 100}, caja2: {texto: "Gasto total (18€ + 32€)", valor: 50}, accion: "cobrarte el gasto con el billete de 100€" } },
+            
+            { id: 6, texto: "Unas zapatillas cuestan 65€ y una camiseta 15€. ¿Cuánto cuestan las dos cosas juntas?", respuesta: 80, opciones: [80, 70, 90],
+              guiado: { caja1: {texto: "Precio zapatillas", valor: 65}, caja2: {texto: "Precio camiseta", valor: 15}, accion: "juntar el precio de ambas cosas" } },
+            
+            { id: 7, texto: "Lucía tenía 90€. Gastó 40€ en el cine y la cena. Al día siguiente encontró 5€ en un abrigo. ¿Cuánto dinero tiene ahora?", respuesta: 55, opciones: [55, 45, 65],
+              guiado: { caja1: {texto: "Le quedó (90€ - 40€)", valor: 50}, caja2: {texto: "Dinero que encontró", valor: 5}, accion: "juntar el dinero que le quedó con el que encontró" } },
+            
+            { id: 8, texto: "Un billete de tren cuesta 48€. Si compro dos billetes iguales, ¿cuánto pagaré en total?", respuesta: 96, opciones: [96, 86, 106],
+              guiado: { caja1: {texto: "Billete de tren 1", valor: 48}, caja2: {texto: "Billete de tren 2", valor: 48}, accion: "juntar el precio de los dos billetes" } },
+            
+            { id: 9, texto: "Tengo 150€. Quiero comprar una bicicleta de 120€ y un casco de 40€. ¿Cuánto dinero me falta para poder comprar las dos cosas?", respuesta: 10, opciones: [10, 20, 30],
+              guiado: { caja1: {texto: "Precio bici y casco (120+40)", valor: 160}, caja2: {texto: "Dinero que tengo", valor: 150}, accion: "calcular cuánto dinero te falta para pagar" } },
+            
+            { id: 10, texto: "Ahorro 10€ cada semana. Después de 6 semanas, decido comprar un balón de 25€. ¿Cuánto dinero me queda ahorrado?", respuesta: 35, opciones: [35, 45, 25],
+              guiado: { caja1: {texto: "Ahorro (6 semanas x 10€)", valor: 60}, caja2: {texto: "Precio del balón", valor: 25}, accion: "pagar el balón restándolo de tus ahorros" } }
+        ];
+
+        let indiceActual = 0;
+        let totalEnZona = 0;
+        let vozActivada = true;
+
+        // Variables Modo Guiado
+        let modoGuiado = false;
+        let pasoGuiado = 0; 
+        let totalCaja1 = 0;
+        let totalCaja2 = 0;
+        let totalOperacion = 0;
+
+        // --- DICCIONARIO Y LÓGICA ARASAAC ---
+        const palabrasClave = [
+            "Juan", "María", "Papá", "Lucía", "abuela", "cumpleaños", "dinero", "total", "juego", "hucha", 
+            "regalo", "billete", "libro", "mochila", "fruta", "carne", "zapatillas", "camiseta", "cosas", 
+            "cine", "cena", "día", "abrigo", "tren", "billetes", "bicicleta", "casco", "semana", 
+            "semanas", "balón", "tiene", "regala", "quiere", "comprar", "cuesta", "falta", "había", 
+            "sacado", "queda", "Tengo", "Compro", "sobra", "comprado", "paga", "devuelven", "cuestan", 
+            "tenía", "Gastó", "encontró", "pagaré", "Quiero", "poder", "Ahorro", "decido",
+            "ahorrados", "juntas", "siguiente", "iguales", "ahorrado"
+        ];
+
+        const terminosBusqueda = {
+            "juan": "niño", "maría": "niña", "papá": "padre", "lucía": "niña", "tiene": "tener", "regala": "regalar", 
+            "quiere": "querer", "cuesta": "costar", "falta": "faltar", "había": "haber", "sacado": "sacar", "queda": "quedar", 
+            "tengo": "tener", "compro": "comprar", "sobra": "sobrar", "comprado": "comprar", "paga": "pagar", 
+            "devuelven": "devolver", "cuestan": "costar", "tenía": "tener", "gastó": "gastar", "encontró": "encontrar",
+            "pagaré": "pagar", "quiero": "querer", "ahorro": "ahorrar", "decido": "decidir", "ahorrados": "ahorrar", 
+            "ahorrado": "ahorrar", "billetes": "billete", "cosas": "cosa", "juntas": "juntos", "iguales": "igual", "semanas": "semana"
+        };
+
+        const pictoCache = {}; 
+
+        function formatearTextoConPictos(texto) {
+            const palabrasSet = new Set(palabrasClave.map(p => p.toLowerCase()));
+            return texto.replace(/[a-zA-ZáéíóúÁÉÍÓÚñÑ]+/g, (match) => {
+                const lowerMatch = match.toLowerCase();
+                if (palabrasSet.has(lowerMatch)) {
+                    return `<span class="palabra-picto" onclick="togglePicto(this, '${lowerMatch}')">${match}</span>`;
+                }
+                return match; 
+            });
+        }
+
+        async function togglePicto(elementoSpan, palabraOriginal) {
+            let tooltipExistente = elementoSpan.querySelector('.picto-tooltip');
+            if (tooltipExistente) {
+                tooltipExistente.remove();
+                return;
+            }
+
+            document.querySelectorAll('.picto-tooltip').forEach(t => t.remove());
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'picto-tooltip';
+            tooltip.innerHTML = '<div class="mini-loader"></div>';
+            elementoSpan.appendChild(tooltip);
+
+            const termino = terminosBusqueda[palabraOriginal] || palabraOriginal;
+
+            try {
+                let pictoUrl = pictoCache[termino];
+
+                if (!pictoUrl) {
+                    const res = await fetch(`https://api.arasaac.org/api/pictograms/es/search/${encodeURIComponent(termino)}`);
+                    
+                    if (res.status === 404) throw new Error("Pictograma no encontrado");
+                    if (!res.ok) throw new Error("Error conectando con ARASAAC");
+                    
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        const idPicto = data[0]._id;
+                        pictoUrl = `https://static.arasaac.org/pictograms/${idPicto}/${idPicto}_300.png`;
+                        pictoCache[termino] = pictoUrl;
+                    } else {
+                        throw new Error("Pictograma no encontrado");
+                    }
+                }
+                tooltip.innerHTML = `<img src="${pictoUrl}" alt="Pictograma">`;
+            } catch (error) {
+                console.error("Error obteniendo pictograma:", error);
+                tooltip.innerHTML = '<span style="color:red; font-size: 2rem;">❌</span>';
+            }
+        }
+        // ------------------------------------------
+
+        // LÓGICA MODO GUIADO
+        function toggleModoGuiado() {
+            modoGuiado = !modoGuiado;
+            const btn = document.getElementById('btn-modo-guiado');
+            const zonaNormal = document.getElementById('zona-normal-container');
+            const zonaGuiada = document.getElementById('zona-guiada-container');
+            
+            if (modoGuiado) {
+                btn.classList.add('activo');
+                btn.innerHTML = '✨ Modo Guiado Activado';
+                zonaNormal.style.display = 'none';
+                zonaGuiada.style.display = 'block';
+                iniciarGuiado();
+            } else {
+                btn.classList.remove('activo');
+                btn.innerHTML = '🪄 Activar Modo Guiado';
+                zonaNormal.style.display = 'block';
+                zonaGuiada.style.display = 'none';
+                borrarDinero();
+            }
+        }
+
+        function iniciarGuiado() {
+            if (!modoGuiado) return;
+            const p = problemas[indiceActual];
+            pasoGuiado = 1;
+            totalCaja1 = 0;
+            totalCaja2 = 0;
+            
+            document.getElementById('contenido-cg1').innerHTML = '';
+            document.getElementById('contenido-cg2').innerHTML = '';
+            
+            document.getElementById('total-cg1').innerText = '0';
+            document.getElementById('total-cg2').innerText = '0';
+            
+            document.getElementById('titulo-cg1').innerText = p.guiado.caja1.texto;
+            document.getElementById('titulo-cg2').innerText = p.guiado.caja2.texto;
+            
+            document.getElementById('caja-g1').classList.remove('correcta');
+            document.getElementById('caja-g2').classList.remove('correcta');
+            
+            const msj = document.getElementById('mensaje-guiado');
+            msj.innerHTML = "1️⃣ Coloca el dinero correcto en cada recuadro.";
+            msj.style.background = '#e3f2fd'; msj.style.borderColor = '#90caf9';
+            
+            document.getElementById('zona-respuesta-guiada').style.display = 'none';
+            document.getElementById('opciones-respuesta').innerHTML = '';
+            document.getElementById('feedback-guiado').innerText = '';
+        }
+
+        function verificarPasoGuiado() {
+            const p = problemas[indiceActual];
+            const cg1Correcta = totalCaja1 === p.guiado.caja1.valor;
+            const cg2Correcta = totalCaja2 === p.guiado.caja2.valor;
+            
+            if (cg1Correcta) document.getElementById('caja-g1').classList.add('correcta');
+            else document.getElementById('caja-g1').classList.remove('correcta');
+            
+            if (cg2Correcta) document.getElementById('caja-g2').classList.add('correcta');
+            else document.getElementById('caja-g2').classList.remove('correcta');
+            
+            // Pasamos al PASO 2: Elegir respuesta final
+            if (cg1Correcta && cg2Correcta && pasoGuiado === 1) {
+                pasoGuiado = 2;
+                const msj = document.getElementById('mensaje-guiado');
+                msj.innerHTML = "2️⃣ ¡Perfecto! Ahora <strong>calcula</strong> el resultado y elige la respuesta correcta.";
+                msj.style.background = '#e8f5e9';
+                msj.style.borderColor = '#4caf50';
+                
+                document.getElementById('zona-respuesta-guiada').style.display = 'block';
+                document.getElementById('instruccion-final-guiada').innerText = "¿Cuánto dinero te da tras " + p.guiado.accion + "?";
+                
+                // Generar las 3 opciones (mezcladas aleatoriamente)
+                const opcionesDiv = document.getElementById('opciones-respuesta');
+                opcionesDiv.innerHTML = '';
+                const opcionesMezcladas = [...p.opciones].sort(() => Math.random() - 0.5);
+                
+                opcionesMezcladas.forEach(opc => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-opcion';
+                    btn.innerText = opc + '€';
+                    btn.onclick = () => comprobarRespuestaGuiada(opc, btn);
+                    opcionesDiv.appendChild(btn);
+                });
+
+                if (vozActivada) {
+                    const audio = new SpeechSynthesisUtterance("¡Perfecto! Calcula el total y elige la respuesta correcta.");
+                    audio.lang = 'es-ES'; audio.rate = 0.9;
+                    window.speechSynthesis.speak(audio);
+                }
+            }
+        }
+
+        // --- SISTEMA DE 3 BOTONES ---
+        function comprobarRespuestaGuiada(valorElegido, btnElement) {
+            const p = problemas[indiceActual];
+            const feedback = document.getElementById('feedback-guiado');
+            
+            // Desactivamos temporalmente los botones
+            const botones = document.querySelectorAll('.btn-opcion');
+            botones.forEach(b => b.style.pointerEvents = 'none');
+            
+            if (valorElegido === p.respuesta) {
+                btnElement.classList.add('correcta');
+                feedback.innerText = "🌟 ¡Súper correcto! ¡Lo has conseguido!";
+                feedback.style.color = "#2e7d32";
+                
+                if (vozActivada) {
+                    const audio = new SpeechSynthesisUtterance("¡Súper correcto! ¡Lo has conseguido!");
+                    audio.lang = 'es-ES'; window.speechSynthesis.speak(audio);
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('btn-next').style.transform = "scale(1.1)";
+                    setTimeout(() => document.getElementById('btn-next').style.transform = "scale(1)", 300);
+                }, 1000);
+            } else {
+                btnElement.classList.add('incorrecta');
+                feedback.innerText = "❌ Ups, esa no es la respuesta. Sigue intentándolo.";
+                feedback.style.color = "#c62828";
+                if (vozActivada) {
+                    const audio = new SpeechSynthesisUtterance("Ups, inténtalo de nuevo.");
+                    audio.lang = 'es-ES'; window.speechSynthesis.speak(audio);
+                }
+                
+                // Si falla, le dejamos volver a intentar después de 1 segundo
+                setTimeout(() => {
+                    btnElement.classList.remove('incorrecta');
+                    botones.forEach(b => b.style.pointerEvents = 'auto');
+                    feedback.innerText = "";
+                }, 1500);
+            }
+        }
+
+        // ------------------------------------------
+
+        // NAVEGACIÓN Y FLUJO GENERAL
+        function generarNav() {
+            const nav = document.getElementById('nav-problemas');
+            nav.innerHTML = '';
+            problemas.forEach((_, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'dot-nav'; btn.innerText = i + 1;
+                btn.onclick = () => irAProblema(i);
+                btn.id = `nav-item-${i}`;
+                nav.appendChild(btn);
+            });
+        }
+
+        function irAProblema(idx) {
+            indiceActual = idx;
+            mostrarProblema();
+        }
+
+        function iniciarRecurso() {
+            document.getElementById('portada').style.display = 'none';
+            document.getElementById('contenedor-recurso').style.display = 'block';
+            generarNav();
+            mostrarProblema();
+        }
+
+        function mostrarProblema() {
+            const p = problemas[indiceActual];
+            document.querySelectorAll('.dot-nav').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-item-${indiceActual}`).classList.add('active');
+            document.getElementById('texto-enunciado').innerHTML = formatearTextoConPictos(p.texto);
+            borrarDinero();
+            document.getElementById('btn-next').innerText = (indiceActual === problemas.length - 1) ? "Finalizar" : "Siguiente Problema";
+            
+            // Eliminada la lectura automática. Ahora solo suena al pulsar el botón "Escuchar problema".
+        }
+
+        function actualizarEstadoVoz() {
+            vozActivada = document.getElementById('toggle-voz').checked;
+            document.getElementById('btn-leer').disabled = !vozActivada;
+            if(!vozActivada) window.speechSynthesis.cancel();
+        }
+
+        function leerTexto() {
+            if(!vozActivada) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(problemas[indiceActual].texto);
+            msg.lang = 'es-ES'; msg.rate = 0.9;
+            window.speechSynthesis.speak(msg);
+        }
+
+        // ==========================================
+        // LÓGICA DE ARRASTRE Y SOLTADO (RATÓN Y TÁCTIL)
+        // ==========================================
+        
+        // 1. Funciones nativas para Ratón (Desktop)
+        document.querySelectorAll('.monedas-sidebar .billete, .monedas-sidebar .moneda').forEach(el => {
+            el.ondragstart = function(ev) {
+                ev.dataTransfer.setData("valor", this.dataset.valor);
+                ev.dataTransfer.setData("clase", this.className);
+                ev.dataTransfer.setData("texto", this.innerText);
+                ev.dataTransfer.setData("origen", "sidebar");
+            };
+        });
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        
+        function drop(ev, numCaja) {
+            ev.preventDefault();
+            const origen = ev.dataTransfer.getData("origen");
+            
+            // Si viene del sidebar, creamos elemento nuevo
+            if (origen === "sidebar") {
+                const valor = parseInt(ev.dataTransfer.getData("valor"));
+                const clase = ev.dataTransfer.getData("clase");
+                const texto = ev.dataTransfer.getData("texto");
+                
+                if (numCaja === 0 && !modoGuiado) {
+                    crearElementoDinero(valor, clase, texto);
+                } else if (modoGuiado && numCaja > 0 && pasoGuiado === 1) {
+                    crearElementoDineroGuiado(valor, clase, texto, numCaja);
+                }
+            }
+        }
+
+        // 2. Lógica Unificada para Táctil (Tablets y Móviles)
+        let isTouchMoving = false;
+        let touchDraggedElement = null;
+        let touchClone = null;
+        let touchSource = null;
+        let touchOffsetX = 0; let touchOffsetY = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            let el = e.target.closest('.billete, .moneda');
+            if (!el) return;
+            
+            isTouchMoving = false;
+
+            // Arrastrar desde Sidebar
+            if (el.closest('.monedas-sidebar')) {
+                touchSource = 'sidebar';
+                touchClone = el.cloneNode(true);
+                touchClone.style.position = 'fixed';
+                touchClone.style.zIndex = '9999';
+                touchClone.style.opacity = '0.9';
+                touchClone.style.pointerEvents = 'none'; // Para no bloquear el drop
+                touchClone.style.display = 'none'; 
+                document.body.appendChild(touchClone);
+                touchDraggedElement = touchClone;
+                
+                const rect = el.getBoundingClientRect();
+                const touch = e.touches[0];
+                touchOffsetX = touch.clientX - rect.left;
+                touchOffsetY = touch.clientY - rect.top;
+            } 
+            // Arrastrar desde Cajas al final
+            else if (modoGuiado && pasoGuiado === 2 && (el.closest('#caja-g1') || el.closest('#caja-g2'))) {
+                touchSource = 'caja';
+                touchDraggedElement = el;
+                
+                const rect = el.getBoundingClientRect();
+                const touch = e.touches[0];
+                touchOffsetX = touch.clientX - rect.left;
+                touchOffsetY = touch.clientY - rect.top;
+            }
+        }, {passive: false});
+
+        document.addEventListener('touchmove', function(e) {
+            if (!touchDraggedElement) return;
+            isTouchMoving = true;
+            
+            if (touchSource === 'sidebar' && touchClone.style.display === 'none') {
+                touchClone.style.display = 'flex'; 
+            }
+            
+            if (touchSource === 'caja' && touchDraggedElement.style.position !== 'fixed') {
+                 touchDraggedElement.style.position = 'fixed';
+                 touchDraggedElement.style.zIndex = '9999';
+                 touchDraggedElement.style.pointerEvents = 'none';
+            }
+
+            const touch = e.touches[0];
+            touchDraggedElement.style.left = (touch.clientX - touchOffsetX) + 'px';
+            touchDraggedElement.style.top = (touch.clientY - touchOffsetY) + 'px';
+            
+            if(e.cancelable) e.preventDefault(); // Bloquea scroll solo al arrastrar billete
+        }, {passive: false});
+
+        document.addEventListener('touchend', function(e) {
+            if (!touchDraggedElement) return;
+            
+            // Si solo fue un toque rápido sin deslizar (Tocar para mover automático)
+            if (!isTouchMoving) {
+                if (touchSource === 'sidebar') {
+                    document.body.removeChild(touchClone);
+                    const el = e.target.closest('.billete, .moneda');
+                    const valor = parseInt(el.dataset.valor);
+                    const clase = el.className;
+                    const texto = el.innerText;
+                    
+                    if (modoGuiado && pasoGuiado === 1) {
+                        const p = problemas[indiceActual];
+                        if (totalCaja1 < p.guiado.caja1.valor) crearElementoDineroGuiado(valor, clase, texto, 1);
+                        else if (totalCaja2 < p.guiado.caja2.valor) crearElementoDineroGuiado(valor, clase, texto, 2);
+                        else crearElementoDineroGuiado(valor, clase, texto, 1);
+                    } else if (!modoGuiado) {
+                        crearElementoDinero(valor, clase, texto);
+                    }
+                } 
+                touchDraggedElement = null;
+                return;
+            }
+
+            // Si sí fue un deslizamiento (Drag Táctil)
+            const touch = e.changedTouches[0];
+            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (touchSource === 'sidebar') {
+                document.body.removeChild(touchClone);
+                if (dropTarget) {
+                    const valor = parseInt(touchClone.dataset.valor);
+                    const clase = touchClone.className;
+                    const texto = touchClone.innerText;
+
+                    if (modoGuiado && pasoGuiado === 1) {
+                        if (dropTarget.closest('#caja-g1')) crearElementoDineroGuiado(valor, clase, texto, 1);
+                        else if (dropTarget.closest('#caja-g2')) crearElementoDineroGuiado(valor, clase, texto, 2);
+                    } else if (!modoGuiado) {
+                        if (dropTarget.closest('#zona-deposito')) crearElementoDinero(valor, clase, texto);
+                    }
+                }
+            } 
+            else if (touchSource === 'caja') {
+                touchDraggedElement.style.position = 'static';
+                touchDraggedElement.style.zIndex = 'auto';
+                touchDraggedElement.style.pointerEvents = 'auto';
+                
+                if (dropTarget && dropTarget.closest('#zona-operacion-guiada')) {
+                    moverAZonaOperacion(touchDraggedElement, parseInt(touchDraggedElement.dataset.valor));
+                }
+            }
+            touchDraggedElement = null;
+        });
+
+        // ==========================================
+
+        function crearElementoDinero(valor, clase, texto) {
+            const clon = document.createElement('div');
+            clon.className = clase; clon.style.cursor = 'pointer'; clon.innerText = texto;
+            clon.onclick = function() {
+                totalEnZona -= valor;
+                document.getElementById('total-colocado').innerText = totalEnZona;
+                this.remove();
+            };
+            document.getElementById('zona-deposito').appendChild(clon);
+            totalEnZona += valor;
+            document.getElementById('total-colocado').innerText = totalEnZona;
+        }
+
+        function crearElementoDineroGuiado(valor, clase, texto, numCaja) {
+            if (pasoGuiado !== 1) return; 
+            const clon = document.createElement('div');
+            clon.className = clase; clon.style.cursor = 'pointer'; clon.innerText = texto;
+            clon.dataset.valor = valor;
+            clon.id = 'dinero-guiado-' + Math.random().toString(36).substring(7);
+            
+            // Comportamiento al hacer clic
+            clon.onclick = function() {
+                if (pasoGuiado === 1) {
+                    // Borrar si nos equivocamos rellenando
+                    if (this.parentElement.id === 'contenido-cg1') {
+                        totalCaja1 -= valor; document.getElementById('total-cg1').innerText = totalCaja1;
+                    } else if (this.parentElement.id === 'contenido-cg2') {
+                        totalCaja2 -= valor; document.getElementById('total-cg2').innerText = totalCaja2;
+                    }
+                    this.remove();
+                    verificarPasoGuiado();
+                }
+            };
+            
+            document.getElementById('contenido-cg' + numCaja).appendChild(clon);
+            if (numCaja === 1) {
+                totalCaja1 += valor; document.getElementById('total-cg1').innerText = totalCaja1;
+            } else {
+                totalCaja2 += valor; document.getElementById('total-cg2').innerText = totalCaja2;
+            }
+            verificarPasoGuiado();
+        }
+
+        function borrarDinero() {
+            if (modoGuiado) {
+                iniciarGuiado();
+            } else {
+                document.getElementById('zona-deposito').innerHTML = '';
+                totalEnZona = 0; document.getElementById('total-colocado').innerText = 0;
+            }
+        }
+
+        function validarYPasar() {
+            if (indiceActual < problemas.length - 1) {
+                indiceActual++;
+                mostrarProblema();
+            } else {
+                alert("¡Excelente trabajo! Has completado todos los retos de NogalesPT.");
+                location.reload();
+            }
+        }
+
+        // PDF con window.print()
+        function prepararPDF(tipo) {
+            const contenedor = document.getElementById('contenido-pdf');
+            contenedor.innerHTML = '';
+            
+            for (let i = 0; i < problemas.length; i += 2) {
+                const pagina = document.createElement('div');
+                pagina.className = 'pagina-pdf';
+                
+                if (tipo === 'normal') {
+                    pagina.appendChild(crearBloqueProblema(i));
+                    if (problemas[i + 1]) pagina.appendChild(crearBloqueProblema(i + 1));
+                } else if (tipo === 'guiado') {
+                    pagina.appendChild(crearBloqueGuiado(i));
+                    if (problemas[i + 1]) pagina.appendChild(crearBloqueGuiado(i + 1));
+                } else if (tipo === 'blanco') {
+                    pagina.appendChild(crearBloqueSinNumeros(i));
+                    if (problemas[i + 1]) pagina.appendChild(crearBloqueSinNumeros(i + 1));
+                }
+                
+                contenedor.appendChild(pagina);
+            }
+            
+            window.print();
+        }
+
+        function crearBloqueProblema(idx) {
+            const p = problemas[idx];
+            const div = document.createElement('div');
+            div.className = 'ficha-problema';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>Problema ${idx + 1}</h2>
+                    <span style="font-size:0.8rem; color:#666;">NogalesPT</span>
+                </div>
+                <p style="font-size: 1.1rem; margin: 10px 0; line-height:1.4;">${p.texto}</p>
+                <div class="cuadro-dibujo"></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <p style="font-weight:bold;">Operación:</p>
+                    <p style="font-weight:bold; border-bottom: 2px solid #000; min-width: 150px; text-align:center; padding-bottom:5px;">Resultado: ________ €</p>
+                </div>
+            `;
+            return div;
+        }
+
+        function crearBloqueGuiado(idx) {
+            const p = problemas[idx];
+            const div = document.createElement('div');
+            div.className = 'ficha-problema';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>Problema ${idx + 1} (Guiado)</h2>
+                    <span style="font-size:0.8rem; color:#666;">NogalesPT</span>
+                </div>
+                <p style="font-size: 1.1rem; margin: 10px 0; line-height:1.4;">${p.texto}</p>
+                <div style="display:flex; gap:15px; margin: 15px 0;">
+                    <div style="flex:1; border:2px dashed #26a69a; border-radius:10px; padding:10px; text-align:center; background: #f9f9f9;">
+                        <h3 style="font-size:1rem; color: #004d40; margin-bottom:5px;">${p.guiado.caja1.texto}</h3>
+                        <p style="font-size:1.5rem; font-weight:bold; color: #333;">${p.guiado.caja1.valor}€</p>
+                    </div>
+                    <div style="flex:1; border:2px dashed #26a69a; border-radius:10px; padding:10px; text-align:center; background: #f9f9f9;">
+                        <h3 style="font-size:1rem; color: #004d40; margin-bottom:5px;">${p.guiado.caja2.texto}</h3>
+                        <p style="font-size:1.5rem; font-weight:bold; color: #333;">${p.guiado.caja2.valor}€</p>
+                    </div>
+                </div>
+                <div class="cuadro-dibujo" style="min-height:100px;"></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <p style="font-weight:bold;">Operación:</p>
+                    <p style="font-weight:bold; border-bottom: 2px solid #000; min-width: 150px; text-align:center; padding-bottom:5px;">Resultado: ________ €</p>
+                </div>
+            `;
+            return div;
+        }
+
+        function crearBloqueSinNumeros(idx) {
+            const p = problemas[idx];
+            // Expresión regular que busca cualquier número y lo cambia por un espacio en blanco grande
+            const textoSinNumeros = p.texto.replace(/\d+\s*€?/g, '________');
+            const div = document.createElement('div');
+            div.className = 'ficha-problema';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>Problema ${idx + 1}</h2>
+                    <span style="font-size:0.8rem; color:#666;">NogalesPT</span>
+                </div>
+                <p style="font-size: 1.1rem; margin: 10px 0; line-height:2;">${textoSinNumeros}</p>
+                <div class="cuadro-dibujo"></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <p style="font-weight:bold;">Operación:</p>
+                    <p style="font-weight:bold; border-bottom: 2px solid #000; min-width: 150px; text-align:center; padding-bottom:5px;">Resultado: ________ €</p>
+                </div>
+            `;
+            return div;
+        }
+
+        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    </script>
+</body>
+</html>
